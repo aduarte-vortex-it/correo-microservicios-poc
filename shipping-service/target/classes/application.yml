@@ -1,0 +1,17 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: shipping-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/shippingdb
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true 
