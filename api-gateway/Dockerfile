@@ -1,10 +1,8 @@
 # Build stage
-FROM eclipse-temurin:17-jdk-alpine AS build
+FROM maven:3.8.4-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN apk update && \
-    apk add --no-cache maven --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 RUN mvn clean package -DskipTests
 
 # Run stage
