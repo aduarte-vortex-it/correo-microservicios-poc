@@ -28,9 +28,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
       SERVER_PORT: ${USER_SERVICE_PORT:-8081}
     ports:
-      - "${USER_SERVICE_PORT:-8081}:8080"
+      - "${USER_SERVICE_PORT:-8081}:8081"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -49,9 +49,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
       SERVER_PORT: ${SHIPPING_SERVICE_PORT:-8082}
     ports:
-      - "${SHIPPING_SERVICE_PORT:-8082}:8080"
+      - "${SHIPPING_SERVICE_PORT:-8082}:8082"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -69,7 +69,7 @@ services:
     ports:
       - "${API_GATEWAY_PORT:-8080}:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
