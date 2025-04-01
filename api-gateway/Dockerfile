@@ -3,7 +3,8 @@ FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN apk add --no-cache maven
+RUN apk update && \
+    apk add --no-cache maven --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 RUN mvn clean package -DskipTests
 
 # Run stage
