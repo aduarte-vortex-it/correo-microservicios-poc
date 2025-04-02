@@ -1,4 +1,5 @@
-import { Shipment, ShipmentStatus } from '../entities/Shipment';
+import { Shipment } from '../entities/Shipment.js';
+import { ShipmentStatus } from '../entities/Shipment';
 
 export interface IShipmentRepository {
   save(shipment: Shipment): Promise<Shipment>;

@@ -1,6 +1,6 @@
-import { IShipmentService } from './IShipmentService';
-import { IShipmentRepository } from '../repositories/IShipmentRepository';
-import { Shipment, ShipmentStatus } from '../entities/Shipment';
+import { IShipmentService } from './IShipmentService.js';
+import { IShipmentRepository } from '../repositories/IShipmentRepository.js';
+import { Shipment } from '../entities/Shipment.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class ShipmentService implements IShipmentService {

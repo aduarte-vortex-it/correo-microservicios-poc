@@ -1,4 +1,5 @@
-import { Shipment, ShipmentStatus } from '../entities/Shipment';
+import { Shipment } from '../entities/Shipment.js';
+import { ShipmentStatus } from '../entities/Shipment';
 
 export interface IShipmentService {
   createShipment(shipment: Omit<Shipment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Shipment>;

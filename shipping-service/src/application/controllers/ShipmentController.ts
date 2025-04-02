@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { IShipmentService } from '../../domain/services/IShipmentService';
-import { Shipment } from '../../domain/entities/Shipment';
+import { IShipmentService } from '../../domain/services/IShipmentService.js';
+import { Shipment } from '../../domain/entities/Shipment.js';
 
 export class ShipmentController {
   constructor(private readonly shipmentService: IShipmentService) {}

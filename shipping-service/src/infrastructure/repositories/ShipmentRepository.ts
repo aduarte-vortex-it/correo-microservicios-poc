@@ -1,5 +1,5 @@
-import { IShipmentRepository } from '../../domain/repositories/IShipmentRepository';
-import { Shipment, ShipmentStatus } from '../../domain/entities/Shipment';
+import { IShipmentRepository } from '../../domain/repositories/IShipmentRepository.js';
+import { Shipment, ShipmentStatus } from '../../domain/entities/Shipment.js';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { config } from '../../config/index.js';
 
