@@ -1,3 +1,6 @@
+-- Crear la extensión uuid-ossp
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Crear el esquema users si no existe
 CREATE SCHEMA IF NOT EXISTS users;
 
