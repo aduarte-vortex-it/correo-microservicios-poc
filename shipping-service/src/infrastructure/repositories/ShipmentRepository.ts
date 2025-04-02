@@ -55,4 +55,9 @@ export class ShipmentRepository implements IShipmentRepository {
   async delete(id: string): Promise<void> {
     // En una implementación real, esto eliminaría de una base de datos
   }
+
+  async findAll(): Promise<Shipment[]> {
+    // En una implementación real, esto consultaría una base de datos
+    return [];
+  }
 } 

@@ -1,6 +1,7 @@
 import { Shipment, ShipmentStatus } from '../entities/Shipment.js';
 
 export interface IShipmentRepository {
+  findAll(): Promise<Shipment[]>;
   save(shipment: Shipment): Promise<Shipment>;
   findById(id: string): Promise<Shipment | null>;
   findByUserId(userId: string): Promise<Shipment[]>;

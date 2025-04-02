@@ -20,11 +20,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
-        UserAggregate user = UserAggregate.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .phone(request.getPhone())
-                .build();
+        UserAggregate user = UserAggregate.create(
+            request.getName(),
+            request.getEmail(),
+            request.getPhone()
+        );
 
         user = userDomainService.createUser(user);
         return ResponseEntity.ok(toResponse(user));

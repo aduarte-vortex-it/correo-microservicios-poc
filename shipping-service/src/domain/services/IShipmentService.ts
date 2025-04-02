@@ -1,6 +1,7 @@
 import { Shipment, ShipmentStatus } from '../entities/Shipment.js';
 
 export interface IShipmentService {
+  getAllShipments(): Promise<Shipment[]>;
   createShipment(shipment: Omit<Shipment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Shipment>;
   processShipment(id: string): Promise<Shipment>;
   getShipment(id: string): Promise<Shipment>;

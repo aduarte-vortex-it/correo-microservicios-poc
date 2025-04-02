@@ -52,4 +52,13 @@ export class ShipmentController {
       res.status(400).json({ error: 'Error deleting shipment' });
     }
   }
+
+  async getAllShipments(req: Request, res: Response): Promise<void> {
+    try {
+      const shipments = await this.shipmentService.getAllShipments();
+      res.json(shipments);
+    } catch (error) {
+      res.status(500).json({ error: 'Error fetching all shipments' });
+    }
+  }
 } 

@@ -19,4 +19,15 @@ public class UserAggregate {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public static UserAggregate create(String name, String email, String phone) {
+        return UserAggregate.builder()
+                .name(name)
+                .email(email)
+                .phone(phone)
+                .status("ACTIVE")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
 }

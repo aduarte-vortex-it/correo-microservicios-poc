@@ -14,6 +14,7 @@ const router = Router();
 router.use(authenticateToken);
 
 // Rutas de envíos
+router.get('/', (req, res) => shipmentController.getAllShipments(req, res));
 router.post('/', (req, res) => shipmentController.createShipment(req, res));
 router.get('/:id', (req, res) => shipmentController.getShipment(req, res));
 router.get('/user/:userId', (req, res) => shipmentController.getUserShipments(req, res));

@@ -48,4 +48,8 @@ export class ShipmentService implements IShipmentService {
   async deleteShipment(id: string): Promise<void> {
     await this.shipmentRepository.delete(id);
   }
+
+  async getAllShipments(): Promise<Shipment[]> {
+    return this.shipmentRepository.findAll();
+  }
 } 
