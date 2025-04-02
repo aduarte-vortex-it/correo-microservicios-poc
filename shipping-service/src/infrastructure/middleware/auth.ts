@@ -14,6 +14,12 @@ declare global {
   }
 }
 
+interface CognitoPayload {
+  sub: string;
+  email: string;
+  [key: string]: any;
+}
+
 const verifier = CognitoJwtVerifier.create({
   userPoolId: config.aws.cognito.userPoolId,
   tokenUse: 'access',
@@ -29,17 +35,17 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       return res.status(401).json({ message: 'Token no proporcionado' });
     }
 
-    const payload = await verifier.verify(token);
+    const payload = await verifier.verify(token) as CognitoPayload;
     
     // Verificar que el payload tenga las propiedades necesarias
-    if (!payload.sub || !('email' in payload)) {
+    if (!payload.sub || !payload.email) {
       throw new Error('Token payload inválido');
     }
 
     // Asignar el usuario al request
     req.user = {
       sub: payload.sub,
-      email: payload.email as string
+      email: payload.email
     };
     
     next();
