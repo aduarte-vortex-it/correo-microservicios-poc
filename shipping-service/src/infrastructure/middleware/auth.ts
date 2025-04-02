@@ -30,14 +30,18 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     }
 
     const payload = await verifier.verify(token);
-    if (!payload.sub || !payload.email) {
+    
+    // Verificar que el payload tenga las propiedades necesarias
+    if (!payload.sub || !('email' in payload)) {
       throw new Error('Token payload inválido');
     }
 
+    // Asignar el usuario al request
     req.user = {
       sub: payload.sub,
       email: payload.email as string
     };
+    
     next();
   } catch (error) {
     return res.status(403).json({ message: 'Token inválido' });
