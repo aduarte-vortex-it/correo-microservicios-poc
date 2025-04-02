@@ -47,6 +47,9 @@ public class UserRepository implements IUserRepository {
         entity.setName(aggregate.getName());
         entity.setEmail(aggregate.getEmail());
         entity.setPhone(aggregate.getPhone());
+        entity.setStatus(aggregate.getStatus());
+        entity.setCreatedAt(aggregate.getCreatedAt());
+        entity.setUpdatedAt(aggregate.getUpdatedAt());
         return entity;
     }
 
@@ -56,6 +59,9 @@ public class UserRepository implements IUserRepository {
                 .name(entity.getName())
                 .email(entity.getEmail())
                 .phone(entity.getPhone())
+                .status(entity.getStatus())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 } 

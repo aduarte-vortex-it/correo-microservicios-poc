@@ -22,6 +22,9 @@ public class UserEntity {
     @Column(nullable = false)
     private String phone;
 
+    @Column(nullable = false)
+    private String status;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
