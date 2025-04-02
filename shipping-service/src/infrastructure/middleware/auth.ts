@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
-import config from '../../config/index.js';
+import { config } from '../../config/index.js';
 
 // Extender la interfaz Request para incluir la propiedad user
 declare global {
@@ -30,9 +30,13 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     }
 
     const payload = await verifier.verify(token);
+    if (!payload.sub || !payload.email) {
+      throw new Error('Token payload inválido');
+    }
+
     req.user = {
       sub: payload.sub,
-      email: payload.email
+      email: payload.email as string
     };
     next();
   } catch (error) {

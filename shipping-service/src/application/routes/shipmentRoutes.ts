@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import { ShipmentController } from '../controllers/ShipmentController.js';
 import { authenticateToken } from '../../infrastructure/middleware/auth.js';
+import { ShipmentService } from '../../domain/services/ShipmentService.js';
+import { ShipmentRepository } from '../../infrastructure/repositories/ShipmentRepository.js';
+
+const shipmentRepository = new ShipmentRepository();
+const shipmentService = new ShipmentService(shipmentRepository);
+const shipmentController = new ShipmentController(shipmentService);
 
 const router = Router();
-const shipmentController = new ShipmentController();
 
 // Aplicar autenticación a todas las rutas
 router.use(authenticateToken);
@@ -15,4 +20,4 @@ router.get('/user/:userId', (req, res) => shipmentController.getUserShipments(re
 router.patch('/:id/status', (req, res) => shipmentController.updateShipmentStatus(req, res));
 router.delete('/:id', (req, res) => shipmentController.deleteShipment(req, res));
 
-return router; 
+export default router; 
