@@ -18,6 +18,8 @@ spring:
     schemas: users
     default-schema: users
     baseline-on-migrate: true
+    validate-on-migrate: false
+    repair-on-migrate: true
 
 management:
   endpoints:
