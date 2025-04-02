@@ -1,11 +1,13 @@
 package com.correo.user.application.controller;
 
-import com.correo.user.application.dto.UserDTO;
+import com.correo.user.application.dto.CreateUserRequest;
+import com.correo.user.application.dto.UserResponse;
 import com.correo.user.domain.aggregate.UserAggregate;
 import com.correo.user.domain.service.UserDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -16,47 +18,43 @@ import java.util.stream.Collectors;
 public class UserController {
     private final UserDomainService userDomainService;
 
+    @PostMapping
+    public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
+        UserAggregate user = UserAggregate.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .build();
+
+        user = userDomainService.createUser(user);
+        return ResponseEntity.ok(toResponse(user));
+    }
+
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        List<UserAggregate> users = userDomainService.findAll();
-        List<UserDTO> dtos = users.stream()
-                .map(this::mapToDTO)
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userDomainService.getAllUsers().stream()
+                .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable UUID id) {
-        return userDomainService.findById(id)
-                .map(this::mapToDTO)
+    public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
+        return userDomainService.getUserById(id)
+                .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
-        UserAggregate user = mapToDomain(userDTO);
-        UserAggregate savedUser = userDomainService.save(user);
-        return ResponseEntity.ok(mapToDTO(savedUser));
-    }
-
-    private UserDTO mapToDTO(UserAggregate user) {
-        return UserDTO.builder()
+    private UserResponse toResponse(UserAggregate user) {
+        return UserResponse.builder()
                 .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .name(user.getName())
                 .email(user.getEmail())
+                .phone(user.getPhone())
                 .status(user.getStatus())
-                .build();
-    }
-
-    private UserAggregate mapToDomain(UserDTO dto) {
-        return UserAggregate.builder()
-                .id(dto.getId())
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .email(dto.getEmail())
-                .status(dto.getStatus())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 } 
