@@ -41,6 +41,137 @@ cp shipping-service/.env.example shipping-service/.env
 docker-compose up --build
 ```
 
+## Pruebas de los Servicios
+
+### 1. Verificar que los servicios estén funcionando
+
+```bash
+# Verificar el estado del servicio de usuarios
+curl http://localhost:8081/actuator/health
+
+# Verificar el estado del servicio de envíos
+curl http://localhost:8082/health
+```
+
+### 2. Probar el servicio de usuarios
+
+```bash
+# Crear un nuevo usuario
+curl -X POST http://localhost:8081/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Juan Pérez",
+    "email": "juan@ejemplo.com",
+    "phone": "1234567890"
+  }'
+
+# Obtener todos los usuarios
+curl http://localhost:8081/api/users
+
+# Crear un envío
+curl -X POST http://localhost:8081/api/shipments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "1",
+    "origin": {
+      "street": "Calle Principal 123",
+      "city": "Ciudad Origen",
+      "state": "Estado Origen",
+      "country": "País Origen",
+      "postalCode": "12345"
+    },
+    "destination": {
+      "street": "Avenida Destino 456",
+      "city": "Ciudad Destino",
+      "state": "Estado Destino",
+      "country": "País Destino",
+      "postalCode": "67890"
+    },
+    "weight": 2.5,
+    "dimensions": {
+      "length": 30,
+      "width": 20,
+      "height": 15
+    }
+  }'
+```
+
+### 3. Probar el servicio de envíos
+
+```bash
+# Obtener todos los envíos
+curl http://localhost:8082/api/shipments
+
+# Obtener un envío específico
+curl http://localhost:8082/api/shipments/1
+
+# Obtener envíos de un usuario
+curl http://localhost:8082/api/shipments/user/1
+
+# Actualizar estado de un envío
+curl -X PATCH http://localhost:8082/api/shipments/1/status \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "IN_TRANSIT"
+  }'
+
+# Eliminar un envío
+curl -X DELETE http://localhost:8082/api/shipments/1
+```
+
+### 4. Monitorear el procesamiento de mensajes
+
+```bash
+# Verificar los logs del servicio de envíos
+docker-compose logs -f shipping-service
+
+# Verificar los logs del servicio de usuarios
+docker-compose logs -f user-service
+```
+
+### 5. Verificar la cola SQS
+
+```bash
+# Obtener el número aproximado de mensajes en la cola
+aws sqs get-queue-attributes \
+  --queue-url <tu-URL-de-SQS> \
+  --attribute-names ApproximateNumberOfMessages
+
+# Recibir mensajes de la cola (útil para debugging)
+aws sqs receive-message \
+  --queue-url <tu-URL-de-SQS> \
+  --max-number-of-messages 10
+```
+
+### 6. Pruebas de integración
+
+1. Crear un usuario y un envío
+2. Verificar que el envío aparece en la cola SQS
+3. Verificar que el servicio de envíos procesa el mensaje
+4. Verificar que el estado del envío se actualiza
+5. Verificar que se envía una notificación
+
+### 7. Pruebas de error
+
+```bash
+# Intentar crear un envío con datos inválidos
+curl -X POST http://localhost:8081/api/shipments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "999",  # Usuario que no existe
+    "origin": {
+      "street": "Calle Principal 123"
+    }
+  }'
+
+# Intentar actualizar un envío que no existe
+curl -X PATCH http://localhost:8082/api/shipments/999/status \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "IN_TRANSIT"
+  }'
+```
+
 ## Estructura del Proyecto
 
 ```
