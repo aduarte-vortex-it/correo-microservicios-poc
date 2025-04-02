@@ -9,6 +9,7 @@ import logger from './infrastructure/utils/logger.js';
 import { authenticateToken } from './infrastructure/middleware/auth.js';
 import { NotificationService } from './infrastructure/services/NotificationService.js';
 import shipmentRoutes from './application/routes/shipmentRoutes.js';
+import authRoutes from './application/routes/authRoutes.js';
 
 dotenv.config();
 
@@ -29,8 +30,11 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
+// Rutas de autenticación
+app.use('/auth', authRoutes);
+
 // Rutas protegidas
-app.use('/api/shipments', shipmentRoutes);
+app.use('/api/shipments', authenticateToken, shipmentRoutes);
 
 // Procesamiento de mensajes SQS
 const sqsClient = new SQSClient({

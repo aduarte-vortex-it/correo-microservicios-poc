@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
 // Extender la interfaz Request para incluir la propiedad user
 declare global {
@@ -21,13 +22,9 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       return res.status(401).json({ message: 'Token no proporcionado' });
     }
 
-    // En un entorno de producción, aquí deberías validar el token
-    // Por ahora, solo simulamos un usuario
-    req.user = {
-      id: '1',
-      email: 'usuario@ejemplo.com'
-    };
-    
+    // Validar el token JWT
+    const decoded = jwt.verify(token, 'tu-secreto-jwt') as { id: string; email: string };
+    req.user = decoded;
     next();
   } catch (error) {
     return res.status(403).json({ message: 'Token inválido' });

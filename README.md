@@ -68,55 +68,48 @@ curl -X POST http://localhost:8081/api/users \
 # Obtener todos los usuarios
 curl http://localhost:8081/api/users
 
-# Crear un envío
-curl -X POST http://localhost:8081/api/shipments \
+# Obtener un usuario específico por ID
+curl http://localhost:8081/api/users/{id}
+
+# Actualizar un usuario
+curl -X PUT http://localhost:8081/api/users/{id} \
   -H "Content-Type: application/json" \
   -d '{
-    "userId": "1",
-    "origin": {
-      "street": "Calle Principal 123",
-      "city": "Ciudad Origen",
-      "state": "Estado Origen",
-      "country": "País Origen",
-      "postalCode": "12345"
-    },
-    "destination": {
-      "street": "Avenida Destino 456",
-      "city": "Ciudad Destino",
-      "state": "Estado Destino",
-      "country": "País Destino",
-      "postalCode": "67890"
-    },
-    "weight": 2.5,
-    "dimensions": {
-      "length": 30,
-      "width": 20,
-      "height": 15
-    }
+    "name": "Juan Pérez Actualizado",
+    "email": "juan.actualizado@ejemplo.com",
+    "phone": "9876543210"
   }'
+
+# Eliminar un usuario
+curl -X DELETE http://localhost:8081/api/users/{id}
 ```
 
 ### 3. Probar el servicio de envíos
 
 ```bash
 # Obtener todos los envíos
-curl http://localhost:8082/api/shipments
+curl http://localhost:8082/api/shipments \
+  -H "Authorization: Bearer <tu-token>"
 
 # Obtener un envío específico
-curl http://localhost:8082/api/shipments/1
+curl http://localhost:8082/api/shipments/{id} \
+  -H "Authorization: Bearer <tu-token>"
 
 # Obtener envíos de un usuario
-curl http://localhost:8082/api/shipments/user/1
+curl http://localhost:8082/api/shipments/user/{userId} \
+  -H "Authorization: Bearer <tu-token>"
 
 # Actualizar estado de un envío
-curl -X PATCH http://localhost:8082/api/shipments/1/status \
+curl -X PATCH http://localhost:8082/api/shipments/{id}/status \
+  -H "Authorization: Bearer <tu-token>" \
   -H "Content-Type: application/json" \
   -d '{
     "status": "IN_TRANSIT"
   }'
 
 # Eliminar un envío
-curl -X DELETE http://localhost:8082/api/shipments/1
+curl -X DELETE http://localhost:8082/api/shipments/{id} \
+  -H "Authorization: Bearer <tu-token>"
 ```
 
 ### 4. Monitorear el procesamiento de mensajes
@@ -145,27 +138,52 @@ aws sqs receive-message \
 
 ### 6. Pruebas de integración
 
-1. Crear un usuario y un envío
-2. Verificar que el envío aparece en la cola SQS
-3. Verificar que el servicio de envíos procesa el mensaje
-4. Verificar que el estado del envío se actualiza
-5. Verificar que se envía una notificación
+1. Crear un usuario:
+```bash
+curl -X POST http://localhost:8081/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "test@ejemplo.com",
+    "phone": "1234567890"
+  }'
+```
+
+2. Verificar que el usuario se creó correctamente:
+```bash
+curl http://localhost:8081/api/users
+```
+
+3. Verificar que el servicio de envíos puede acceder al usuario:
+```bash
+curl http://localhost:8082/api/shipments/user/{userId}
+```
 
 ### 7. Pruebas de error
 
 ```bash
-# Intentar crear un envío con datos inválidos
-curl -X POST http://localhost:8081/api/shipments \
+# Intentar acceder sin token
+curl http://localhost:8082/api/shipments
+
+# Intentar acceder con token inválido
+curl http://localhost:8082/api/shipments \
+  -H "Authorization: Bearer token-invalido"
+
+# Intentar crear un usuario con email duplicado
+curl -X POST http://localhost:8081/api/users \
   -H "Content-Type: application/json" \
   -d '{
-    "userId": "999",  # Usuario que no existe
-    "origin": {
-      "street": "Calle Principal 123"
-    }
+    "name": "Usuario Duplicado",
+    "email": "juan@ejemplo.com",  # Email ya existente
+    "phone": "1234567890"
   }'
 
+# Intentar obtener un usuario que no existe
+curl http://localhost:8081/api/users/{id-inexistente}
+
 # Intentar actualizar un envío que no existe
-curl -X PATCH http://localhost:8082/api/shipments/999/status \
+curl -X PATCH http://localhost:8082/api/shipments/{id-inexistente}/status \
+  -H "Authorization: Bearer <tu-token>" \
   -H "Content-Type: application/json" \
   -d '{
     "status": "IN_TRANSIT"
@@ -306,3 +324,44 @@ cdk destroy
 5. Los servicios Fargate se escalan automáticamente según la demanda
 6. SQS tiene un límite de 120,000 mensajes en cola
 7. Los mensajes en SQS se retienen por 4 días por defecto
+
+## Autenticación
+
+El servicio de envíos requiere autenticación mediante un token JWT. Para probar los endpoints, necesitas incluir el header de autorización:
+
+```bash
+# Ejemplo de header de autorización
+Authorization: Bearer <tu-token>
+```
+
+### Obtener el Bearer Token
+
+Para desarrollo local, puedes obtener un token de prueba usando el siguiente endpoint:
+
+```bash
+# Obtener token de prueba
+curl -X POST http://localhost:8082/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@ejemplo.com",
+    "password": "test123"
+  }'
+```
+
+La respuesta será un objeto JSON con el token:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Para usar el token en las peticiones, copia el valor del token y úsalo en el header de autorización:
+
+```bash
+# Ejemplo de uso del token
+curl http://localhost:8082/api/shipments \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+Nota: Este es un token de prueba para desarrollo local. En producción, deberías obtener el token a través de tu sistema de autenticación.
