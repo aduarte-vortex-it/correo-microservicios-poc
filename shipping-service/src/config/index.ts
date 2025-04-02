@@ -11,10 +11,6 @@ interface Config {
     secretAccessKey: string;
     sqsQueueUrl: string;
     snsTopicArn: string;
-    cognito: {
-      userPoolId: string;
-      clientId: string;
-    };
   };
   logging: {
     level: string;
@@ -29,11 +25,7 @@ export const config: Config = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
     sqsQueueUrl: process.env.SQS_QUEUE_URL || '',
-    snsTopicArn: process.env.SNS_TOPIC_ARN || '',
-    cognito: {
-      userPoolId: process.env.COGNITO_USER_POOL_ID || '',
-      clientId: process.env.COGNITO_CLIENT_ID || ''
-    }
+    snsTopicArn: process.env.SNS_TOPIC_ARN || ''
   },
   logging: {
     level: process.env.LOG_LEVEL || 'info'

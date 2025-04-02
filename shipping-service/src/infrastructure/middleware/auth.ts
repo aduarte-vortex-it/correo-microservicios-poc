@@ -1,30 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { CognitoJwtVerifier } from 'aws-jwt-verify';
-import { config } from '../../config/index.js';
 
 // Extender la interfaz Request para incluir la propiedad user
 declare global {
   namespace Express {
     interface Request {
       user?: {
-        sub: string;
+        id: string;
         email: string;
       };
     }
   }
 }
-
-interface CognitoPayload {
-  sub: string;
-  email: string;
-  [key: string]: any;
-}
-
-const verifier = CognitoJwtVerifier.create({
-  userPoolId: config.aws.cognito.userPoolId,
-  tokenUse: 'access',
-  clientId: config.aws.cognito.clientId
-});
 
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -35,17 +21,11 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       return res.status(401).json({ message: 'Token no proporcionado' });
     }
 
-    const payload = await verifier.verify(token) as CognitoPayload;
-    
-    // Verificar que el payload tenga las propiedades necesarias
-    if (!payload.sub || !payload.email) {
-      throw new Error('Token payload inválido');
-    }
-
-    // Asignar el usuario al request
+    // En un entorno de producción, aquí deberías validar el token
+    // Por ahora, solo simulamos un usuario
     req.user = {
-      sub: payload.sub,
-      email: payload.email
+      id: '1',
+      email: 'usuario@ejemplo.com'
     };
     
     next();
