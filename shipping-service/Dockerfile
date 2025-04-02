@@ -1,13 +1,13 @@
 # Build stage
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 RUN npm run build
 
 # Run stage
-FROM eclipse-temurin:17-jre-alpine
+FROM node:18-alpine
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
