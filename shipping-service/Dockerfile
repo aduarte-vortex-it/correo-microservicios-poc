@@ -1,18 +1,25 @@
 # Build stage
-FROM maven:3.8.4-eclipse-temurin-17-alpine AS build
+FROM eclipse-temurin:17-jdk-alpine AS builder
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
 # Run stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-RUN apk update && \
-    apk add --no-cache curl && \
-    rm -rf /var/cache/apk/*
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.env ./.env
+
+# Instalar wget para health check
+RUN apk add --no-cache wget
+
 EXPOSE 8082
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
-    CMD curl -f http://localhost:8082/actuator/health || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8082/health || exit 1
+
+CMD ["node", "dist/index.js"]

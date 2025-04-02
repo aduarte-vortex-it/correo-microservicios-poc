@@ -6,18 +6,18 @@ Este proyecto es una prueba de concepto (POC) de una aplicación de correo basad
 
 La aplicación está compuesta por los siguientes microservicios:
 
-- **API Gateway**: Punto de entrada único para todas las peticiones
-- **User Service**: Gestión de usuarios
-- **Shipping Service**: Gestión de envíos
+- **User Service**: Gestión de usuarios y envío de mensajes a SQS
+- **Shipping Service**: Procesamiento de envíos desde SQS
 - **PostgreSQL**: Base de datos
+- **AWS SQS**: Cola de mensajes para comunicación entre servicios
 
 ## Requisitos Previos
 
-- Java 11
+- Java 17
 - Maven
 - Docker
 - AWS CLI
-- Node.js 16+
+- Node.js 18+
 - AWS CDK CLI
 
 ## Desarrollo Local
@@ -30,8 +30,10 @@ cd correo-microservicios-poc
 
 2. Configurar variables de entorno:
 ```bash
-cp .env.example .env
-# Editar .env con tus configuraciones
+# Para cada servicio
+cp user-service/.env.example user-service/.env
+cp shipping-service/.env.example shipping-service/.env
+# Editar los archivos .env con tus configuraciones
 ```
 
 3. Construir y ejecutar con Docker Compose:
@@ -39,51 +41,27 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-## Despliegue en AWS
-
-1. Configurar credenciales de AWS:
-```bash
-aws configure
-```
-
-2. Instalar dependencias de CDK:
-```bash
-cd infrastructure
-npm install
-```
-
-3. Compilar el proyecto CDK:
-```bash
-npm run build
-```
-
-4. Desplegar la infraestructura:
-```bash
-cdk deploy
-```
-
 ## Estructura del Proyecto
 
 ```
 .
-├── api-gateway/          # API Gateway Service
-├── shipping-service/     # Shipping Service
-├── user-service/        # User Service
+├── shipping-service/     # Servicio de envíos (Node.js + TypeScript)
+├── user-service/        # Servicio de usuarios (Spring Boot)
 ├── infrastructure/      # AWS CDK Infrastructure
 ├── docker-compose.yml   # Docker Compose para desarrollo local
-└── .env                 # Variables de entorno
+└── .env                 # Variables de entorno globales
 ```
 
 ## Endpoints
 
-- API Gateway: http://localhost:8080
 - User Service: http://localhost:8081
 - Shipping Service: http://localhost:8082
 
 ## Monitoreo
 
-- Health Checks: http://localhost:8080/actuator/health
-- Metrics: http://localhost:8080/actuator/metrics
+- Health Checks:
+  - User Service: http://localhost:8081/actuator/health
+  - Shipping Service: http://localhost:8082/health
 
 ## Límites de AWS Free Tier
 
@@ -100,9 +78,10 @@ cdk deploy
 - 512MB RAM por servicio
 - 1 instancia por servicio
 
-### Secrets Manager
-- 10,000 secretos/mes
-- 30,000 llamadas API/mes
+### SQS
+- 1,000,000 llamadas API/mes
+- 1,000,000 mensajes/mes
+- 1,000,000 GB-día de transferencia de datos
 
 ### VPC
 - 1 NAT Gateway (750 horas/mes)
@@ -122,7 +101,7 @@ aws budgets create-budget \
             "Unit": "USD"
         },
         "CostFilters": {
-            "Service": ["Amazon RDS", "Amazon ECS", "AWS Secrets Manager"]
+            "Service": ["Amazon RDS", "Amazon ECS", "Amazon SQS"]
         },
         "TimeUnit": "MONTHLY",
         "BudgetType": "COST"
@@ -166,6 +145,16 @@ aws cloudwatch get-metric-statistics \
     --end-time $(date -u +"%Y-%m-%dT%H:%M:%S") \
     --period 300 \
     --statistics Average
+
+# SQS
+aws cloudwatch get-metric-statistics \
+    --namespace AWS/SQS \
+    --metric-name ApproximateNumberOfMessagesVisible \
+    --dimensions Name=QueueName,Value=<tu-cola> \
+    --start-time $(date -u +"%Y-%m-%dT%H:%M:%S" -d "1 hour ago") \
+    --end-time $(date -u +"%Y-%m-%dT%H:%M:%S") \
+    --period 300 \
+    --statistics Average
 ```
 
 ## Limpieza
@@ -183,6 +172,6 @@ cdk destroy
 2. El NAT Gateway incurre en costos, considere usar NAT Instance para Free Tier
 3. Monitoree el uso de recursos para evitar exceder los límites de Free Tier
 4. Los backups automáticos se eliminan al destruir la instancia RDS
-5. Los secretos se eliminan automáticamente al destruir el stack
-6. Los servicios Fargate se escalan automáticamente según la demanda
-7. El API Gateway está configurado para ser accesible públicamente
+5. Los servicios Fargate se escalan automáticamente según la demanda
+6. SQS tiene un límite de 120,000 mensajes en cola
+7. Los mensajes en SQS se retienen por 4 días por defecto
