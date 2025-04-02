@@ -53,7 +53,28 @@ curl http://localhost:8081/actuator/health
 curl http://localhost:8082/health
 ```
 
-### 2. Probar el servicio de usuarios
+### 2. Autenticación
+
+El servicio de envíos requiere autenticación mediante un token JWT. Para obtener un token de prueba:
+
+```bash
+# Obtener token de prueba
+curl -X POST http://localhost:8082/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@ejemplo.com",
+    "password": "test123"
+  }'
+```
+
+La respuesta será un objeto JSON con el token:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### 3. Pruebas del Servicio de Usuarios
 
 ```bash
 # Crear un nuevo usuario
@@ -84,22 +105,24 @@ curl -X PUT http://localhost:8081/api/users/{id} \
 curl -X DELETE http://localhost:8081/api/users/{id}
 ```
 
-### 3. Probar el servicio de envíos
+### 4. Pruebas del Servicio de Envíos
+
+Primero, obtén un token de autenticación usando el endpoint de autenticación. Luego, usa el token en todas las peticiones:
 
 ```bash
-# Obtener todos los envíos
+# Obtener todos los envíos (requiere token)
 curl http://localhost:8082/api/shipments \
   -H "Authorization: Bearer <tu-token>"
 
-# Obtener un envío específico
+# Obtener un envío específico (requiere token)
 curl http://localhost:8082/api/shipments/{id} \
   -H "Authorization: Bearer <tu-token>"
 
-# Obtener envíos de un usuario
+# Obtener envíos de un usuario (requiere token)
 curl http://localhost:8082/api/shipments/user/{userId} \
   -H "Authorization: Bearer <tu-token>"
 
-# Actualizar estado de un envío
+# Actualizar estado de un envío (requiere token)
 curl -X PATCH http://localhost:8082/api/shipments/{id}/status \
   -H "Authorization: Bearer <tu-token>" \
   -H "Content-Type: application/json" \
@@ -107,59 +130,12 @@ curl -X PATCH http://localhost:8082/api/shipments/{id}/status \
     "status": "IN_TRANSIT"
   }'
 
-# Eliminar un envío
+# Eliminar un envío (requiere token)
 curl -X DELETE http://localhost:8082/api/shipments/{id} \
   -H "Authorization: Bearer <tu-token>"
 ```
 
-### 4. Monitorear el procesamiento de mensajes
-
-```bash
-# Verificar los logs del servicio de envíos
-docker-compose logs -f shipping-service
-
-# Verificar los logs del servicio de usuarios
-docker-compose logs -f user-service
-```
-
-### 5. Verificar la cola SQS
-
-```bash
-# Obtener el número aproximado de mensajes en la cola
-aws sqs get-queue-attributes \
-  --queue-url <tu-URL-de-SQS> \
-  --attribute-names ApproximateNumberOfMessages
-
-# Recibir mensajes de la cola (útil para debugging)
-aws sqs receive-message \
-  --queue-url <tu-URL-de-SQS> \
-  --max-number-of-messages 10
-```
-
-### 6. Pruebas de integración
-
-1. Crear un usuario:
-```bash
-curl -X POST http://localhost:8081/api/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Test User",
-    "email": "test@ejemplo.com",
-    "phone": "1234567890"
-  }'
-```
-
-2. Verificar que el usuario se creó correctamente:
-```bash
-curl http://localhost:8081/api/users
-```
-
-3. Verificar que el servicio de envíos puede acceder al usuario:
-```bash
-curl http://localhost:8082/api/shipments/user/{userId}
-```
-
-### 7. Pruebas de error
+### 5. Pruebas de Error
 
 ```bash
 # Intentar acceder sin token
@@ -174,7 +150,7 @@ curl -X POST http://localhost:8081/api/users \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Usuario Duplicado",
-    "email": "juan@ejemplo.com",  # Email ya existente
+    "email": "juan@ejemplo.com",
     "phone": "1234567890"
   }'
 
@@ -188,6 +164,26 @@ curl -X PATCH http://localhost:8082/api/shipments/{id-inexistente}/status \
   -d '{
     "status": "IN_TRANSIT"
   }'
+```
+
+### 6. Monitoreo
+
+```bash
+# Verificar los logs del servicio de envíos
+docker-compose logs -f shipping-service
+
+# Verificar los logs del servicio de usuarios
+docker-compose logs -f user-service
+
+# Verificar la cola SQS
+aws sqs get-queue-attributes \
+  --queue-url <tu-URL-de-SQS> \
+  --attribute-names ApproximateNumberOfMessages
+
+# Recibir mensajes de la cola (útil para debugging)
+aws sqs receive-message \
+  --queue-url <tu-URL-de-SQS> \
+  --max-number-of-messages 10
 ```
 
 ## Estructura del Proyecto
