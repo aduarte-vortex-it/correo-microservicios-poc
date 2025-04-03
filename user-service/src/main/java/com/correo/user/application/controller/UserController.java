@@ -34,7 +34,7 @@ public class UserController {
         return ResponseEntity.ok(toResponse(user));
     }
 
-    @PutMapping("/{id}")
+    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID id,
             @RequestBody UpdateUserRequest request) {
