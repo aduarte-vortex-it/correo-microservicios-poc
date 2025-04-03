@@ -62,7 +62,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
         log.info("Eliminando usuario con ID: {}", id);
         try {
             userDomainService.deleteUser(id);
@@ -70,6 +70,21 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             log.warn("Error al eliminar usuario: {}", e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllUsers() {
+        log.info("Eliminando todos los usuarios");
+        try {
+            List<UserAggregate> users = userDomainService.getAllUsers();
+            for (UserAggregate user : users) {
+                userDomainService.deleteUser(user.getId());
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Error al eliminar usuarios: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
