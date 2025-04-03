@@ -12,4 +12,5 @@ public interface IUserRepository {
     boolean existsByEmail(String email);
     boolean existsById(UUID id);
     Optional<UserAggregate> findByEmail(String email);
+    void deleteById(UUID id);
 } 

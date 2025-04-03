@@ -46,4 +46,12 @@ public class UserDomainServiceImpl implements UserDomainService {
     public Optional<UserAggregate> getUserById(UUID id) {
         return userRepository.findById(id);
     }
+
+    @Override
+    public void deleteUser(UUID id) {
+        if (!userRepository.existsById(id)) {
+            throw new IllegalArgumentException("Usuario no encontrado");
+        }
+        userRepository.deleteById(id);
+    }
 } 

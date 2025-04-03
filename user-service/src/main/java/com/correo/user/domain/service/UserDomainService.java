@@ -10,4 +10,5 @@ public interface UserDomainService {
     UserAggregate updateUser(UserAggregate user);
     List<UserAggregate> getAllUsers();
     Optional<UserAggregate> getUserById(UUID id);
+    void deleteUser(UUID id);
 } 

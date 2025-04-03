@@ -52,6 +52,11 @@ public class UserRepository implements IUserRepository {
                 .map(this::toAggregate);
     }
 
+    @Override
+    public void deleteById(UUID id) {
+        jpaUserRepository.deleteById(id);
+    }
+
     private UserEntity toEntity(UserAggregate aggregate) {
         UserEntity entity = new UserEntity();
         entity.setId(aggregate.getId());

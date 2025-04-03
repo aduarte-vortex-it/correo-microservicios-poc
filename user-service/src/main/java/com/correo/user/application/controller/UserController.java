@@ -61,6 +61,18 @@ public class UserController {
                 });
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        log.info("Eliminando usuario con ID: {}", id);
+        try {
+            userDomainService.deleteUser(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("Error al eliminar usuario: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         log.info("Obteniendo todos los usuarios");
