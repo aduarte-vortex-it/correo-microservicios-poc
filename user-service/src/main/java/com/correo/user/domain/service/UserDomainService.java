@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface UserDomainService {
     UserAggregate createUser(UserAggregate user);
+    UserAggregate updateUser(UserAggregate user);
     List<UserAggregate> getAllUsers();
     Optional<UserAggregate> getUserById(UUID id);
 } 

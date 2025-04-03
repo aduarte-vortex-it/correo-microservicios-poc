@@ -41,6 +41,17 @@ public class UserRepository implements IUserRepository {
         return jpaUserRepository.existsByEmail(email);
     }
 
+    @Override
+    public boolean existsById(UUID id) {
+        return jpaUserRepository.existsById(id);
+    }
+
+    @Override
+    public Optional<UserAggregate> findByEmail(String email) {
+        return jpaUserRepository.findByEmail(email)
+                .map(this::toAggregate);
+    }
+
     private UserEntity toEntity(UserAggregate aggregate) {
         UserEntity entity = new UserEntity();
         entity.setId(aggregate.getId());

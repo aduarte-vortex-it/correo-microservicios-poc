@@ -1,6 +1,7 @@
 package com.correo.user.application.controller;
 
 import com.correo.user.application.dto.CreateUserRequest;
+import com.correo.user.application.dto.UpdateUserRequest;
 import com.correo.user.application.dto.UserResponse;
 import com.correo.user.domain.aggregate.UserAggregate;
 import com.correo.user.domain.service.UserDomainService;
@@ -28,6 +29,28 @@ public class UserController {
 
         user = userDomainService.createUser(user);
         return ResponseEntity.ok(toResponse(user));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable UUID id,
+            @RequestBody UpdateUserRequest request) {
+        return userDomainService.getUserById(id)
+                .map(existingUser -> {
+                    UserAggregate updatedUser = UserAggregate.builder()
+                            .id(existingUser.getId())
+                            .name(request.getName())
+                            .email(request.getEmail())
+                            .phone(request.getPhone())
+                            .status(existingUser.getStatus())
+                            .createdAt(existingUser.getCreatedAt())
+                            .updatedAt(existingUser.getUpdatedAt())
+                            .build();
+                    
+                    updatedUser = userDomainService.updateUser(updatedUser);
+                    return ResponseEntity.ok(toResponse(updatedUser));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping

@@ -10,4 +10,6 @@ public interface IUserRepository {
     Optional<UserAggregate> findById(UUID id);
     List<UserAggregate> findAll();
     boolean existsByEmail(String email);
+    boolean existsById(UUID id);
+    Optional<UserAggregate> findByEmail(String email);
 } 

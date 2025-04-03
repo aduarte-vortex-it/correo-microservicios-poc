@@ -23,6 +23,21 @@ public class UserDomainServiceImpl implements UserDomainService {
     }
 
     @Override
+    public UserAggregate updateUser(UserAggregate user) {
+        if (!userRepository.existsById(user.getId())) {
+            throw new IllegalArgumentException("Usuario no encontrado");
+        }
+        
+        // Verificar si el email ya existe en otro usuario
+        Optional<UserAggregate> existingUser = userRepository.findByEmail(user.getEmail());
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("El email ya está registrado en otro usuario");
+        }
+        
+        return userRepository.save(user);
+    }
+
+    @Override
     public List<UserAggregate> getAllUsers() {
         return userRepository.findAll();
     }
