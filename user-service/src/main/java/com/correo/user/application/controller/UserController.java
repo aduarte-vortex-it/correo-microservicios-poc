@@ -61,6 +61,13 @@ public class UserController {
                 });
     }
 
+    @PutMapping
+    public ResponseEntity<?> updateUserNoId(@RequestBody UpdateUserRequest request) {
+        log.warn("Se recibió petición PUT sin ID. La URL correcta debe ser /api/users/{id}");
+        return ResponseEntity.badRequest()
+                .body("Debe especificar el ID del usuario en la URL. Ejemplo: /api/users/{id}");
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
         log.info("Eliminando usuario con ID: {}", id);
