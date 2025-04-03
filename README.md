@@ -148,6 +148,34 @@ Primero, obtén un token de autenticación usando el endpoint de autenticación.
 curl http://localhost:8082/api/shipments \
   -H "Authorization: Bearer <tu-token>"
 
+# Crear un nuevo envío (requiere token)
+curl -X POST http://localhost:8082/api/shipments \
+  -H "Authorization: Bearer <tu-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "12345678-1234-1234-1234-123456789abc",
+    "origin": {
+      "street": "Calle Origen 123",
+      "city": "Ciudad Origen",
+      "state": "Estado Origen",
+      "country": "País Origen",
+      "postalCode": "12345"
+    },
+    "destination": {
+      "street": "Calle Destino 456",
+      "city": "Ciudad Destino",
+      "state": "Estado Destino",
+      "country": "País Destino",
+      "postalCode": "67890"
+    },
+    "weight": 5.5,
+    "dimensions": {
+      "length": 30,
+      "width": 20,
+      "height": 15
+    }
+  }'
+
 # Obtener un envío específico (requiere token)
 curl http://localhost:8082/api/shipments/{id} \
   -H "Authorization: Bearer <tu-token>"
@@ -200,7 +228,42 @@ curl -X PATCH http://localhost:8082/api/shipments/{id-inexistente}/status \
   }'
 ```
 
-### 6. Monitoreo
+### 7. Depuración con Logs
+
+El servicio de envíos (shipping-service) incluye logs detallados para facilitar la depuración. Puedes ver estos logs en la consola mientras el servicio está en ejecución.
+
+```bash
+# Ver logs en tiempo real del servicio de envíos
+docker-compose logs -f shipping-service
+
+# Ver solo los últimos 100 logs
+docker-compose logs --tail=100 shipping-service
+```
+
+Los logs incluyen información detallada sobre:
+- Autenticación y validación de tokens
+- Creación, actualización y eliminación de envíos
+- Comunicación con SQS
+- Errores y excepciones
+
+Ejemplo de log durante la creación de un envío:
+```
+shipping-service_1   | [AuthController] Login successful for user: test@ejemplo.com
+shipping-service_1   | [AuthController] JWT token generated
+shipping-service_1   | [Auth Middleware] Verifying authentication token for path: /
+shipping-service_1   | [Auth Middleware] Authorization header: Present
+shipping-service_1   | [Auth Middleware] Verifying token
+shipping-service_1   | [Auth Middleware] Token valid for user: test@ejemplo.com
+shipping-service_1   | [ShipmentController] Creating shipment with data: {"userId":"12345678-1234-1234-1234-123456789abc"...}
+shipping-service_1   | [ShipmentService] Creating new shipment with data: {"userId":"12345678-1234-1234-1234-123456789abc"...}
+shipping-service_1   | [ShipmentService] Generated new shipment with ID: a1b2c3d4-e5f6-g7h8-i9j0
+shipping-service_1   | [ShipmentRepository] Saving shipment with ID: a1b2c3d4-e5f6-g7h8-i9j0
+shipping-service_1   | [ShipmentRepository] Sending message to SQS queue: https://sqs.us-east-1.amazonaws.com/123456789012/envios
+shipping-service_1   | [ShipmentRepository] Successfully sent message to SQS
+shipping-service_1   | [ShipmentController] Shipment created successfully: {"id":"a1b2c3d4-e5f6-g7h8-i9j0"...}
+```
+
+### 8. Monitoreo
 
 ```bash
 # Verificar los logs del servicio de envíos
