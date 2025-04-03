@@ -34,7 +34,7 @@ public class UserController {
         return ResponseEntity.ok(toResponse(user));
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID id,
             @RequestBody UpdateUserRequest request) {
@@ -61,7 +61,7 @@ public class UserController {
                 });
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
         log.info("Eliminando usuario con ID: {}", id);
         try {
@@ -73,7 +73,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(method = RequestMethod.DELETE)
+    @DeleteMapping
     public ResponseEntity<Void> deleteAllUsers() {
         log.info("Eliminando todos los usuarios");
         try {
