@@ -125,7 +125,7 @@ curl -X DELETE http://localhost:8081/api/users
 
 ### 4. Formato de Respuesta
 
-El formato de fecha en las respuestas ha sido configurado para usar un formato estandarizado sin comas:
+El formato de fecha en las respuestas ha sido configurado para usar un formato estandarizado:
 
 ```json
 {
@@ -134,8 +134,8 @@ El formato de fecha en las respuestas ha sido configurado para usar un formato e
   "email": "juan@ejemplo.com",
   "phone": "1234567890",
   "status": "ACTIVE",
-  "createdAt": "2025-04-03 12:34:56",
-  "updatedAt": "2025-04-03 12:34:56"
+  "createdAt": "03-04-2025 12:34:56",
+  "updatedAt": "03-04-2025 12:34:56"
 }
 ```
 
