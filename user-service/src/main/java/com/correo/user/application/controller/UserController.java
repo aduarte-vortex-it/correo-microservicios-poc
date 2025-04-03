@@ -6,6 +6,7 @@ import com.correo.user.application.dto.UserResponse;
 import com.correo.user.domain.aggregate.UserAggregate;
 import com.correo.user.domain.service.UserDomainService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
+        log.info("Creando usuario con email: {}", request.getEmail());
         UserAggregate user = UserAggregate.create(
             request.getName(),
             request.getEmail(),
@@ -35,8 +38,10 @@ public class UserController {
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID id,
             @RequestBody UpdateUserRequest request) {
+        log.info("Actualizando usuario con ID: {}", id);
         return userDomainService.getUserById(id)
                 .map(existingUser -> {
+                    log.info("Usuario encontrado, actualizando datos");
                     UserAggregate updatedUser = UserAggregate.builder()
                             .id(existingUser.getId())
                             .name(request.getName())
@@ -50,11 +55,15 @@ public class UserController {
                     updatedUser = userDomainService.updateUser(updatedUser);
                     return ResponseEntity.ok(toResponse(updatedUser));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    log.warn("Usuario no encontrado con ID: {}", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
+        log.info("Obteniendo todos los usuarios");
         List<UserResponse> users = userDomainService.getAllUsers().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -63,10 +72,14 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
+        log.info("Buscando usuario con ID: {}", id);
         return userDomainService.getUserById(id)
                 .map(this::toResponse)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    log.warn("Usuario no encontrado con ID: {}", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     private UserResponse toResponse(UserAggregate user) {
