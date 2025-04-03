@@ -283,6 +283,21 @@ aws sqs receive-message \
   --max-number-of-messages 10
 ```
 
+### 9. Notas sobre la cola SQS
+
+La aplicación soporta tanto colas SQS estándar como colas FIFO (First-In-First-Out). Para colas FIFO (identificadas por el sufijo `.fifo` en la URL), se añaden automáticamente los siguientes parámetros requeridos:
+
+- `MessageGroupId`: Se utiliza el ID del usuario o 'default' si no está disponible
+- `MessageDeduplicationId`: Se utiliza el ID del envío para garantizar la unicidad
+
+Ejemplo de configuración en el archivo .env para una cola FIFO:
+
+```
+AWS_SQS_QUEUE_URL=https://sqs.region.amazonaws.com/account-id/queue-name.fifo
+```
+
+Si se utiliza una cola estándar (sin el sufijo `.fifo`), estos parámetros no se añaden.
+
 ## Estructura del Proyecto
 
 ```

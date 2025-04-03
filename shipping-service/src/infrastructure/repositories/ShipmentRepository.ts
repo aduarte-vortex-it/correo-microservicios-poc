@@ -25,10 +25,19 @@ export class ShipmentRepository implements IShipmentRepository {
       // Guardar en memoria
       this.shipments.set(shipment.id, shipment);
       
-      // Enviar a SQS
+      // Verificar si la cola es FIFO
+      const isFifoQueue = config.aws.sqsQueueUrl.endsWith('.fifo');
+      console.log('[ShipmentRepository] Queue is FIFO:', isFifoQueue);
+      
+      // Preparar comando con parámetros adicionales para FIFO si es necesario
       const command = new SendMessageCommand({
         QueueUrl: config.aws.sqsQueueUrl,
-        MessageBody: JSON.stringify(shipment)
+        MessageBody: JSON.stringify(shipment),
+        // Parámetros requeridos para colas FIFO
+        ...(isFifoQueue && {
+          MessageGroupId: shipment.userId || 'default', // Usar userId como MessageGroupId o 'default'
+          MessageDeduplicationId: shipment.id // Usar el ID del envío como MessageDeduplicationId
+        })
       });
 
       console.log('[ShipmentRepository] Sending message to SQS queue:', config.aws.sqsQueueUrl);
@@ -74,9 +83,17 @@ export class ShipmentRepository implements IShipmentRepository {
     
     // También enviar la actualización a SQS
     try {
+      // Verificar si la cola es FIFO
+      const isFifoQueue = config.aws.sqsQueueUrl.endsWith('.fifo');
+      
       const command = new SendMessageCommand({
         QueueUrl: config.aws.sqsQueueUrl,
-        MessageBody: JSON.stringify({ ...shipment, action: 'UPDATE_STATUS' })
+        MessageBody: JSON.stringify({ ...shipment, action: 'UPDATE_STATUS' }),
+        // Parámetros requeridos para colas FIFO
+        ...(isFifoQueue && {
+          MessageGroupId: shipment.userId || 'default',
+          MessageDeduplicationId: `${shipment.id}-${Date.now()}` // Asegurar unicidad
+        })
       });
       
       console.log('[ShipmentRepository] Sending status update to SQS');
@@ -97,13 +114,22 @@ export class ShipmentRepository implements IShipmentRepository {
       throw new Error('Shipment not found');
     }
     
+    const shipment = this.shipments.get(id);
     this.shipments.delete(id);
     
     // Notificar eliminación a SQS
     try {
+      // Verificar si la cola es FIFO
+      const isFifoQueue = config.aws.sqsQueueUrl.endsWith('.fifo');
+      
       const command = new SendMessageCommand({
         QueueUrl: config.aws.sqsQueueUrl,
-        MessageBody: JSON.stringify({ id, action: 'DELETE' })
+        MessageBody: JSON.stringify({ id, action: 'DELETE' }),
+        // Parámetros requeridos para colas FIFO
+        ...(isFifoQueue && {
+          MessageGroupId: shipment?.userId || 'default',
+          MessageDeduplicationId: `${id}-delete-${Date.now()}`
+        })
       });
       
       console.log('[ShipmentRepository] Sending deletion notification to SQS');
