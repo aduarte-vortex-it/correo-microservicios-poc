@@ -89,10 +89,13 @@ curl -X POST http://localhost:8081/api/users \
 # Obtener todos los usuarios
 curl http://localhost:8081/api/users
 
-# Obtener un usuario específico por ID
+# Obtener un usuario específico por ID (path param)
 curl http://localhost:8081/api/users/{id}
 
-# Actualizar un usuario
+# Obtener un usuario específico por ID (query param)
+curl http://localhost:8081/api/users?id={id}
+
+# Actualizar un usuario (path param)
 curl -X PUT http://localhost:8081/api/users/{id} \
   -H "Content-Type: application/json" \
   -d '{
@@ -101,11 +104,42 @@ curl -X PUT http://localhost:8081/api/users/{id} \
     "phone": "9876543210"
   }'
 
-# Eliminar un usuario
+# Actualizar un usuario (query param)
+curl -X PUT http://localhost:8081/api/users?id={id} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Juan Pérez Actualizado",
+    "email": "juan.actualizado@ejemplo.com",
+    "phone": "9876543210"
+  }'
+
+# Eliminar un usuario (path param)
 curl -X DELETE http://localhost:8081/api/users/{id}
+
+# Eliminar un usuario (query param)
+curl -X DELETE http://localhost:8081/api/users?id={id}
+
+# Eliminar todos los usuarios
+curl -X DELETE http://localhost:8081/api/users
 ```
 
-### 4. Pruebas del Servicio de Envíos
+### 4. Formato de Respuesta
+
+El formato de fecha en las respuestas ha sido configurado para usar un formato estandarizado sin comas:
+
+```json
+{
+  "id": "12345678-1234-1234-1234-123456789abc",
+  "name": "Juan Pérez",
+  "email": "juan@ejemplo.com",
+  "phone": "1234567890",
+  "status": "ACTIVE",
+  "createdAt": "2025-04-03 12:34:56",
+  "updatedAt": "2025-04-03 12:34:56"
+}
+```
+
+### 5. Pruebas del Servicio de Envíos
 
 Primero, obtén un token de autenticación usando el endpoint de autenticación. Luego, usa el token en todas las peticiones:
 
@@ -135,7 +169,7 @@ curl -X DELETE http://localhost:8082/api/shipments/{id} \
   -H "Authorization: Bearer <tu-token>"
 ```
 
-### 5. Pruebas de Error
+### 6. Pruebas de Error
 
 ```bash
 # Intentar acceder sin token

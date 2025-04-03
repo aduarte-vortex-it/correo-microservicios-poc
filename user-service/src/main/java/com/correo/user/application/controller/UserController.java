@@ -35,10 +35,30 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(
+    public ResponseEntity<UserResponse> updateUserByPathId(
             @PathVariable UUID id,
             @RequestBody UpdateUserRequest request) {
-        log.info("Actualizando usuario con ID: {}", id);
+        log.info("Actualizando usuario con ID (path): {}", id);
+        return updateUserInternal(id, request);
+    }
+
+    @PutMapping
+    public ResponseEntity<UserResponse> updateUserByQueryId(
+            @RequestParam(required = false) UUID id,
+            @RequestBody UpdateUserRequest request) {
+        if (id == null) {
+            log.warn("Se recibió petición PUT sin ID. Se debe proporcionar un ID.");
+            return ResponseEntity.badRequest()
+                    .body(UserResponse.builder()
+                            .name("Error")
+                            .email("Debe especificar el ID del usuario. Ejemplo: /api/users?id=uuid")
+                            .build());
+        }
+        log.info("Actualizando usuario con ID (query): {}", id);
+        return updateUserInternal(id, request);
+    }
+
+    private ResponseEntity<UserResponse> updateUserInternal(UUID id, UpdateUserRequest request) {
         return userDomainService.getUserById(id)
                 .map(existingUser -> {
                     log.info("Usuario encontrado, actualizando datos");
@@ -61,37 +81,38 @@ public class UserController {
                 });
     }
 
-    @PutMapping
-    public ResponseEntity<?> updateUserNoId(@RequestBody UpdateUserRequest request) {
-        log.warn("Se recibió petición PUT sin ID. La URL correcta debe ser /api/users/{id}");
-        return ResponseEntity.badRequest()
-                .body("Debe especificar el ID del usuario en la URL. Ejemplo: /api/users/{id}");
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUserByPathId(@PathVariable UUID id) {
+        log.info("Eliminando usuario con ID (path): {}", id);
+        return deleteUserInternal(id);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
-        log.info("Eliminando usuario con ID: {}", id);
+    @DeleteMapping
+    public ResponseEntity<Void> deleteUserByQueryId(@RequestParam(required = false) UUID id) {
+        if (id == null) {
+            log.info("Eliminando todos los usuarios");
+            try {
+                List<UserAggregate> users = userDomainService.getAllUsers();
+                for (UserAggregate user : users) {
+                    userDomainService.deleteUser(user.getId());
+                }
+                return ResponseEntity.ok().build();
+            } catch (Exception e) {
+                log.error("Error al eliminar usuarios: {}", e.getMessage());
+                return ResponseEntity.internalServerError().build();
+            }
+        }
+        log.info("Eliminando usuario con ID (query): {}", id);
+        return deleteUserInternal(id);
+    }
+
+    private ResponseEntity<Void> deleteUserInternal(UUID id) {
         try {
             userDomainService.deleteUser(id);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             log.warn("Error al eliminar usuario: {}", e.getMessage());
             return ResponseEntity.notFound().build();
-        }
-    }
-
-    @DeleteMapping
-    public ResponseEntity<Void> deleteAllUsers() {
-        log.info("Eliminando todos los usuarios");
-        try {
-            List<UserAggregate> users = userDomainService.getAllUsers();
-            for (UserAggregate user : users) {
-                userDomainService.deleteUser(user.getId());
-            }
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("Error al eliminar usuarios: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -105,8 +126,18 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
-        log.info("Buscando usuario con ID: {}", id);
+    public ResponseEntity<UserResponse> getUserByPathId(@PathVariable UUID id) {
+        log.info("Buscando usuario con ID (path): {}", id);
+        return getUserByIdInternal(id);
+    }
+
+    @GetMapping(params = "id")
+    public ResponseEntity<UserResponse> getUserByQueryId(@RequestParam UUID id) {
+        log.info("Buscando usuario con ID (query): {}", id);
+        return getUserByIdInternal(id);
+    }
+
+    private ResponseEntity<UserResponse> getUserByIdInternal(UUID id) {
         return userDomainService.getUserById(id)
                 .map(this::toResponse)
                 .map(ResponseEntity::ok)
