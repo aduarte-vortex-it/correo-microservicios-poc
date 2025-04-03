@@ -61,7 +61,7 @@ public class UserController {
                 });
     }
 
-    @DeleteMapping("/{id}")
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
         log.info("Eliminando usuario con ID: {}", id);
         try {
@@ -73,7 +73,7 @@ public class UserController {
         }
     }
 
-    @DeleteMapping
+    @RequestMapping(method = RequestMethod.DELETE)
     public ResponseEntity<Void> deleteAllUsers() {
         log.info("Eliminando todos los usuarios");
         try {
