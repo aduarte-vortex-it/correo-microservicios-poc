@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import { SQSClient, ReceiveMessageCommand } from '@aws-sdk/client-sqs';
+import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -54,22 +54,67 @@ async function processShipments() {
     });
 
     const response = await sqsClient.send(command);
-    if (response.Messages) {
+    if (response.Messages && response.Messages.length > 0) {
+      logger.info(`Procesando ${response.Messages.length} mensajes de la cola SQS`);
+      
       for (const message of response.Messages) {
         try {
-          const shipment = JSON.parse(message.Body || '{}');
+          if (!message.Body) {
+            logger.warn('Mensaje recibido sin cuerpo');
+            continue;
+          }
+          
+          const parsedBody = JSON.parse(message.Body);
+          logger.info('Mensaje SQS recibido:', parsedBody);
+          
+          // Extraer información del mensaje
+          const shipmentId = parsedBody.id || 'desconocido';
+          const action = parsedBody.action || 'PROCESS';
+          const status = parsedBody.status || 'N/A';
+          
+          // Generar mensaje informativo
+          let notificationMessage = '';
+          let notificationSubject = '';
+          
+          switch (action) {
+            case 'DELETE':
+              notificationMessage = `Envío eliminado: ${shipmentId}`;
+              notificationSubject = 'Eliminación de Envío';
+              break;
+            case 'UPDATE_STATUS':
+              notificationMessage = `Envío actualizado: ${shipmentId}, nuevo estado: ${status}`;
+              notificationSubject = 'Actualización de Estado';
+              break;
+            default:
+              notificationMessage = `Envío procesado: ${shipmentId}`;
+              notificationSubject = 'Procesamiento de Envío';
+          }
+          
+          // Enviar notificación
           await notificationService.sendNotification(
-            `Envío procesado: ${shipment.id}`,
-            'Procesamiento de Envío'
+            notificationMessage,
+            notificationSubject
           );
-          logger.info(`Envío procesado: ${shipment.id}`);
+          
+          logger.info(notificationMessage);
+          
+          // Eliminar el mensaje de la cola
+          if (message.ReceiptHandle) {
+            await sqsClient.send(new DeleteMessageCommand({
+              QueueUrl: config.aws.sqsQueueUrl,
+              ReceiptHandle: message.ReceiptHandle
+            }));
+            logger.info(`Mensaje eliminado de la cola: ${message.MessageId}`);
+          }
         } catch (error) {
-          logger.error('Error procesando mensaje:', error);
+          logger.error('Error procesando mensaje SQS:', error);
         }
       }
+    } else {
+      logger.debug('No hay mensajes nuevos en la cola SQS');
     }
   } catch (error) {
-    logger.error('Error recibiendo mensajes:', error);
+    logger.error('Error recibiendo mensajes de SQS:', error);
   }
 }
 

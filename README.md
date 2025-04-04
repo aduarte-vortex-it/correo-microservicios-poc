@@ -458,6 +458,55 @@ Cada uno de estos eventos puede ser consumido por otros servicios para realizar 
 - Actualizar métricas
 - Sincronizar datos entre servicios
 
+### 12. Procesamiento de Notificaciones
+
+El servicio de envíos procesa automáticamente los mensajes de la cola SQS y genera notificaciones con SNS. Estas notificaciones varían según el tipo de acción:
+
+| Acción | Asunto (Subject) | Mensaje |
+|--------|-----------------|---------|
+| `CREATE` / Por defecto | "Procesamiento de Envío" | "Envío procesado: {id}" |
+| `UPDATE_STATUS` | "Actualización de Estado" | "Envío actualizado: {id}, nuevo estado: {status}" |
+| `DELETE` | "Eliminación de Envío" | "Envío eliminado: {id}" |
+
+#### 12.1 Estados de un Envío
+
+Los estados posibles para un envío son:
+```
+CREATED = 'CREATED',
+PROCESSING = 'PROCESSING',
+IN_TRANSIT = 'IN_TRANSIT',
+DELIVERED = 'DELIVERED',
+FAILED = 'FAILED'
+```
+
+#### 12.2 Consumir Notificaciones
+
+Para consumir estas notificaciones desde otro servicio, puedes:
+
+1. **Suscribir un endpoint HTTP/HTTPS**:
+```bash
+aws sns subscribe \
+  --topic-arn arn:aws:sns:region:account-id:topic-name \
+  --protocol https \
+  --notification-endpoint https://tu-servicio.com/webhook
+```
+
+2. **Suscribir otro SQS**:
+```bash
+aws sns subscribe \
+  --topic-arn arn:aws:sns:region:account-id:topic-name \
+  --protocol sqs \
+  --notification-endpoint arn:aws:sqs:region:account-id:queue-name
+```
+
+3. **Suscribir una función Lambda**:
+```bash
+aws sns subscribe \
+  --topic-arn arn:aws:sns:region:account-id:topic-name \
+  --protocol lambda \
+  --notification-endpoint arn:aws:lambda:region:account-id:function:nombre-funcion
+```
+
 ## Estructura del Proyecto
 
 ```
