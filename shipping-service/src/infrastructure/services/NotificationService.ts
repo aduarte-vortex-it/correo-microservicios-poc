@@ -1,7 +1,7 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { config } from '../../config/index.js';
 import logger from '../utils/logger.js';
-import { v7 as uuidv7 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 export class NotificationService {
   private readonly snsClient: SNSClient;
@@ -33,7 +33,7 @@ export class NotificationService {
         // Parámetros requeridos para temas FIFO
         ...(isFifoTopic && {
           MessageGroupId: 'shipment-notifications', // Grupo de mensajes para envíos
-          MessageDeduplicationId: uuidv7() // ID único para evitar duplicados
+          MessageDeduplicationId: uuidv4() // ID único para evitar duplicados
         })
       });
 

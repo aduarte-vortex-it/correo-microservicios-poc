@@ -476,17 +476,19 @@ Cada uno de estos eventos puede ser consumido por otros servicios para realizar 
 
 ## Características Técnicas
 
-### UUID v7
+### UUID
 
-Este proyecto utiliza UUID v7 para todos los identificadores, en lugar de UUID v4. UUID v7 ofrece las siguientes ventajas:
+Este proyecto utiliza una combinación de tecnologías UUID:
 
-- **Ordenación temporal**: Los UUID v7 incluyen un timestamp de alta precisión, lo que permite ordenarlos cronológicamente.
-- **Rendimiento**: Mayor eficiencia en bases de datos debido a la secuencialidad.
-- **Seguridad**: Mantiene la aleatoriedad necesaria para evitar conflictos y predecibilidad.
+- **En PostgreSQL**: Implementamos UUID v7 a través de una función personalizada `uuid_generate_v7()`. 
+  UUID v7 ofrece las siguientes ventajas:
+  - **Ordenación temporal**: Incluye un timestamp de alta precisión, permitiendo ordenar IDs cronológicamente.
+  - **Rendimiento**: Mayor eficiencia en bases de datos debido a la secuencialidad.
+  - **Seguridad**: Mantiene la aleatoriedad necesaria para evitar conflictos y predecibilidad.
 
-Implementación:
-- En Node.js: Utilizamos la biblioteca estándar `uuid` con la función `v7`.
-- En PostgreSQL: Hemos implementado una función personalizada `uuid_generate_v7()` que genera UUIDs compatibles con el estándar v7.
+- **En Node.js**: Utilizamos UUID v4 de la biblioteca estándar `uuid`, que proporciona identificadores completamente aleatorios.
+
+Esta implementación híbrida permite aprovechar las ventajas de UUIDv7 en la base de datos, mientras se mantiene la compatibilidad con las bibliotecas estándar de Node.js.
 
 ### Monitoreo
 
