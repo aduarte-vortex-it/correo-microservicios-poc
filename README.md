@@ -298,6 +298,166 @@ AWS_SQS_QUEUE_URL=https://sqs.region.amazonaws.com/account-id/queue-name.fifo
 
 Si se utiliza una cola estándar (sin el sufijo `.fifo`), estos parámetros no se añaden.
 
+### 10. Notificaciones con SNS
+
+El servicio también utiliza Amazon SNS (Simple Notification Service) para enviar notificaciones sobre los eventos de envío. La aplicación soporta tanto temas SNS estándar como temas FIFO. Para temas FIFO (identificados por el sufijo `.fifo` en el ARN), se añaden automáticamente los siguientes parámetros requeridos:
+
+- `MessageGroupId`: Se utiliza 'shipment-notifications' como grupo para todos los mensajes relacionados con envíos
+- `MessageDeduplicationId`: Se genera un UUID único para cada mensaje para evitar duplicados
+
+Ejemplo de configuración en el archivo .env para un tema FIFO:
+
+```
+AWS_SNS_TOPIC_ARN=arn:aws:sns:region:account-id:topic-name.fifo
+```
+
+Si se utiliza un tema estándar (sin el sufijo `.fifo`), estos parámetros no se añaden.
+
+Para configurar correctamente SNS:
+
+```bash
+# Crear un tema SNS
+aws sns create-topic --name shipment-notifications
+
+# Para un tema FIFO, añade los atributos necesarios
+aws sns create-topic \
+  --name shipment-notifications.fifo \
+  --attributes FifoTopic=true,ContentBasedDeduplication=false
+```
+
+### 11. Prueba de Eventos de Shipping
+
+El servicio de envíos utiliza Amazon SQS para comunicarse con otros servicios. A continuación se describe cómo probar este flujo de eventos:
+
+#### 11.1 Preparación
+
+1. Primero, obtén un token de autenticación:
+```bash
+# Obtener token de prueba
+curl -X POST http://localhost:8082/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@ejemplo.com",
+    "password": "test123"
+  }'
+```
+
+2. Guarda el token recibido:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### 11.2 Crear un Envío (Produce un evento en SQS)
+
+```bash
+# Crear un nuevo envío
+curl -X POST http://localhost:8082/api/shipments \
+  -H "Authorization: Bearer TU_TOKEN_AQUÍ" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "12345678-1234-1234-1234-123456789abc",
+    "origin": {
+      "street": "Calle Origen 123",
+      "city": "Ciudad Origen",
+      "state": "Estado Origen",
+      "country": "País Origen",
+      "postalCode": "12345"
+    },
+    "destination": {
+      "street": "Calle Destino 456",
+      "city": "Ciudad Destino",
+      "state": "Estado Destino",
+      "country": "País Destino",
+      "postalCode": "67890"
+    },
+    "weight": 5.5,
+    "dimensions": {
+      "length": 30,
+      "width": 20,
+      "height": 15
+    }
+  }'
+```
+
+3. Guarda el ID del envío creado de la respuesta:
+```json
+{
+  "id": "a1b2c3d4-e5f6-g7h8-i9j0",
+  "userId": "12345678-1234-1234-1234-123456789abc",
+  "status": "CREATED",
+  ...
+}
+```
+
+#### 11.3 Actualizar Estado del Envío (Produce evento en SQS)
+
+```bash
+# Actualizar estado de un envío
+curl -X PATCH http://localhost:8082/api/shipments/ID_DEL_ENVÍO/status \
+  -H "Authorization: Bearer TU_TOKEN_AQUÍ" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "IN_TRANSIT"
+  }'
+```
+
+#### 11.4 Verificar Mensajes en SQS
+
+Para verificar los mensajes en la cola SQS, puedes usar AWS CLI:
+
+```bash
+# Obtener el número de mensajes en la cola
+aws sqs get-queue-attributes \
+  --queue-url URL_DE_TU_COLA_SQS \
+  --attribute-names ApproximateNumberOfMessages \
+  --region REGION
+
+# Recibir y ver mensajes de la cola
+aws sqs receive-message \
+  --queue-url URL_DE_TU_COLA_SQS \
+  --max-number-of-messages 10 \
+  --region REGION
+```
+
+Si estás usando una cola FIFO, necesitas especificar el grupo de mensajes:
+
+```bash
+aws sqs receive-message \
+  --queue-url URL_DE_TU_COLA_SQS \
+  --max-number-of-messages 10 \
+  --attribute-names All \
+  --message-attribute-names All \
+  --region REGION
+```
+
+#### 11.5 Verificar Logs para Seguimiento de Eventos
+
+Para ver cómo se procesan los eventos, puedes seguir los logs:
+
+```bash
+# Ver logs en tiempo real
+docker-compose logs -f shipping-service
+```
+
+Busca logs como:
+```
+[ShipmentRepository] Sending message to SQS queue: https://sqs.region.amazonaws.com/account-id/queue-name
+[ShipmentRepository] Successfully sent message to SQS
+```
+
+#### 11.6 Flujo Completo de un Evento
+
+1. **Crear un envío** → Genera un mensaje en SQS con `action: 'CREATE'`
+2. **Actualizar estado** → Genera un mensaje en SQS con `action: 'UPDATE_STATUS'`
+3. **Eliminar envío** → Genera un mensaje en SQS con `action: 'DELETE'`
+
+Cada uno de estos eventos puede ser consumido por otros servicios para realizar acciones como:
+- Notificar a los usuarios
+- Actualizar métricas
+- Sincronizar datos entre servicios
+
 ## Estructura del Proyecto
 
 ```
