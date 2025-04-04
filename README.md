@@ -474,7 +474,21 @@ Cada uno de estos eventos puede ser consumido por otros servicios para realizar 
 - User Service: http://localhost:8081
 - Shipping Service: http://localhost:8082
 
-## Monitoreo
+## Características Técnicas
+
+### UUID v7
+
+Este proyecto utiliza UUID v7 para todos los identificadores, en lugar de UUID v4. UUID v7 ofrece las siguientes ventajas:
+
+- **Ordenación temporal**: Los UUID v7 incluyen un timestamp de alta precisión, lo que permite ordenarlos cronológicamente.
+- **Rendimiento**: Mayor eficiencia en bases de datos debido a la secuencialidad.
+- **Seguridad**: Mantiene la aleatoriedad necesaria para evitar conflictos y predecibilidad.
+
+Implementación:
+- En Node.js: Utilizamos la biblioteca estándar `uuid` con la función `v7`.
+- En PostgreSQL: Hemos implementado una función personalizada `uuid_generate_v7()` que genera UUIDs compatibles con el estándar v7.
+
+### Monitoreo
 
 - Health Checks:
   - User Service: http://localhost:8081/actuator/health

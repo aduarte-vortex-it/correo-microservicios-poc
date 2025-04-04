@@ -1,7 +1,7 @@
 import { IShipmentService } from './IShipmentService.js';
 import { IShipmentRepository } from '../repositories/IShipmentRepository.js';
 import { Shipment, ShipmentStatus } from '../entities/Shipment.js';
-import { v4 as uuidv4 } from 'uuid';
+import { v7 as uuidv7 } from 'uuid';
 
 export class ShipmentService implements IShipmentService {
   constructor(private readonly shipmentRepository: IShipmentRepository) {}
@@ -10,7 +10,7 @@ export class ShipmentService implements IShipmentService {
     console.log('[ShipmentService] Creating new shipment with data:', JSON.stringify(shipmentData));
     const shipment: Shipment = {
       ...shipmentData,
-      id: uuidv4(),
+      id: uuidv7(),
       status: ShipmentStatus.CREATED,
       createdAt: new Date(),
       updatedAt: new Date()
